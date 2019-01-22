@@ -3,8 +3,14 @@ package org.mitre.synthea.engine;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.spi.json.GsonJsonProvider;
+import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystemNotFoundException;
@@ -20,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,6 +34,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
+import org.mitre.synthea.helpers.Config;
 import org.mitre.synthea.helpers.Utilities;
 import org.mitre.synthea.modules.CardiovascularDiseaseModule;
 import org.mitre.synthea.modules.EncounterModule;
@@ -45,6 +53,11 @@ import org.mitre.synthea.world.agents.Person;
  */
 public class Module {
 
+  private static final Configuration JSON_PATH_CONFIG = Configuration.builder()
+      .jsonProvider(new GsonJsonProvider())
+      .mappingProvider(new GsonMappingProvider())
+      .build();
+
   private static final Map<String, ModuleSupplier> modules = loadModules();
 
   private static Map<String, ModuleSupplier> loadModules() {
@@ -56,6 +69,20 @@ public class Module {
     retVal.put("Cardiovascular Disease", new ModuleSupplier(new CardiovascularDiseaseModule()));
     retVal.put("Quality Of Life", new ModuleSupplier(new QualityOfLifeModule()));
     retVal.put("Weight Loss", new ModuleSupplier(new WeightLossModule()));
+
+    String moduleOverrideFile = Config.get("module_override");
+    Properties overrides = null;
+    if (moduleOverrideFile != null && !moduleOverrideFile.trim().equals("")) {
+      try {
+        overrides = new Properties();
+        overrides.load(new FileReader(moduleOverrideFile));
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+
+    final Properties moduleOverrides = overrides; // hack variable so we can use it in the lambda below
 
     try {
       URI modulesURI = ClassLoader.getSystemClassLoader().getResource("modules").toURI();
@@ -71,7 +98,7 @@ public class Module {
             }
             retVal.put(relativePath, new ModuleSupplier(submodule, 
                                                         relativePath,
-                () -> loadFile(basePath.relativize(t), submodule)));
+                () -> loadFile(basePath.relativize(t), submodule, moduleOverrides)));
           });
     } catch (Exception e) {
       e.printStackTrace();
@@ -107,17 +134,34 @@ public class Module {
         .replace("\\", "/");
   }
 
-  public static Module loadFile(Path path, Path modulesFolder) throws Exception {
+  public static Module loadFile(Path path, Path modulesFolder, Properties overrides) throws Exception {
     boolean submodule = !path.getParent().equals(modulesFolder);
-    return loadFile(path, submodule);
+    return loadFile(path, submodule, overrides);
   }
 
-  private static Module loadFile(Path path, boolean submodule) throws Exception {
+  private static Module loadFile(Path path, boolean submodule, Properties overrides) throws Exception {
     System.out.format("Loading %s %s\n", submodule ? "submodule" : "module", path.toString());
     String jsonString = Utilities.readResource(path.toString());
+    if (overrides != null) {
+      jsonString = applyOverrides(jsonString, overrides, path.getFileName().toString());
+    }
     JsonParser parser = new JsonParser();
     JsonObject object = parser.parse(jsonString).getAsJsonObject();
     return new Module(object, submodule);
+  }
+
+ private static String applyOverrides(String jsonString, Properties overrides, String moduleFileName) {
+    DocumentContext ctx = JsonPath.using(JSON_PATH_CONFIG).parse(jsonString);
+    overrides.forEach((key, value) -> {
+      String[] parts = ((String)key).split("::"); // use :: for the separator because files cannot contain :
+      String module = parts[0];
+      if (module.equals(moduleFileName)) {
+        String jsonPath = parts[1];
+        Double numberValue = Double.parseDouble((String)value);
+        ctx.set(jsonPath, numberValue);
+      }
+    });
+    return ctx.jsonString();
   }
 
   public static String[] getModuleNames() {
