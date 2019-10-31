@@ -86,13 +86,13 @@ public class Person implements Serializable, QuadTreeElement {
   private static final String DEDUCTIBLE = "deductible";
   private static final String LAST_MONTH_PAID = "last_month_paid";
 
-  public final Random random;
+  public Random random;
   public final long seed;
   public long populationSeed;
-  public transient Map<String, Object> attributes;
+  public Map<String, Object> attributes;
   public transient Map<VitalSign, ValueGenerator> vitalSigns;
-  private Map<String, Map<String, Integer>> symptoms;
-  private Map<String, Map<String, Boolean>> symptomStatuses;
+  Map<String, Map<String, Integer>> symptoms;
+  Map<String, Map<String, Boolean>> symptomStatuses;
   public transient Map<String, HealthRecord.Medication> chronicMedications;
   /** the active health record. */
   public transient HealthRecord record;
@@ -106,9 +106,9 @@ public class Person implements Serializable, QuadTreeElement {
   // Each element in payerOwnerHistory array corresponds to the owner of the insurance at that age. 
   private String[] payerOwnerHistory;
   /* Yearly Healthcare Expenses. */
-  private Map<Integer, Double> healthcareExpensesYearly;
+  Map<Integer, Double> healthcareExpensesYearly;
   /* Yearly Healthcare Coverage. */
-  private Map<Integer, Double> healthcareCoverageYearly;
+  Map<Integer, Double> healthcareCoverageYearly;
 
   /**
    * Person constructor.
@@ -134,7 +134,7 @@ public class Person implements Serializable, QuadTreeElement {
     healthcareExpensesYearly = new HashMap<Integer, Double>();
     healthcareCoverageYearly = new HashMap<Integer, Double>();
   }
-
+  
   /**
    * Retuns a random double.
    */
