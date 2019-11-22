@@ -89,6 +89,14 @@ public class Person implements Serializable, QuadTreeElement {
   public Random random;
   public final long seed;
   public long populationSeed;
+  /** 
+   * Tracks the last time that the person was updated over a serialize/deserialize
+   */
+  public long lastUpdated;
+  /**
+   * Tracks the remaining modules for a person over a serialize/deserialize
+   */
+  public List<Module> currentModules;
   public Map<String, Object> attributes;
   public Map<VitalSign, ValueGenerator> vitalSigns;
   Map<String, Map<String, Integer>> symptoms;
@@ -99,7 +107,7 @@ public class Person implements Serializable, QuadTreeElement {
   public Map<String, HealthRecord> records;
   public boolean hasMultipleRecords;
   /** History of the currently active module. */
-  public transient List<State> history;
+  public List<State> history;
   /* Person's Payer History. */
   // Each element in payerHistory array corresponds to the insurance held at that age.
   public Payer[] payerHistory;
@@ -128,9 +136,9 @@ public class Person implements Serializable, QuadTreeElement {
       records = new ConcurrentHashMap<String, HealthRecord>();
     }
     record = new HealthRecord(this);
-    // 128 because it's a nice power of 2, and nobody will reach that age
-    payerHistory = new Payer[128];
-    payerOwnerHistory = new String[128];
+    // 256 because it's a nice power of 2, and nobody will reach that age
+    payerHistory = new Payer[256];
+    payerOwnerHistory = new String[256];
     healthcareExpensesYearly = new HashMap<Integer, Double>();
     healthcareCoverageYearly = new HashMap<Integer, Double>();
   }
@@ -618,14 +626,23 @@ public class Person implements Serializable, QuadTreeElement {
    * Returns the person's Payer at the given time.
    */
   public Payer getPayerAtTime(long time) {
-    return this.payerHistory[this.ageInYears(time)];
+    int ageInYears = this.ageInYears(time);
+    if (this.payerHistory.length > ageInYears) {
+      return this.payerHistory[ageInYears];
+    } else {
+      return null;
+    }
   }
 
   /**
    * Returns the person's Payer at the given age.
    */
   public Payer getPayerAtAge(int personAge) {
-    return this.payerHistory[personAge];
+    if (this.payerHistory.length > personAge) {
+      return this.payerHistory[personAge];
+    } else {
+      return null;
+    }
   }
 
   /**

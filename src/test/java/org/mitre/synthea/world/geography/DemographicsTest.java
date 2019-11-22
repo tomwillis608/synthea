@@ -1,14 +1,15 @@
 package org.mitre.synthea.world.geography;
 
+import static org.junit.Assert.assertTrue;
+
+import com.google.common.collect.Table;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
-import com.google.common.collect.Table;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class DemographicsTest {
   public static Demographics philly;

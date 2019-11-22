@@ -9,8 +9,8 @@ import org.mitre.synthea.world.concepts.BiometricsConfig;
  * Generate realistic blood pressure vital signs. 
  * Can reproducibly look a few days into the past and future.
  * 
- * See <a href="https://raywinstead.com/bp/thrice.htm">https://raywinstead.com/bp/thrice.htm</a>
- * for desired result
+ * <p>See <a href="https://raywinstead.com/bp/thrice.htm">https://raywinstead.com/bp/thrice.htm</a>
+ * for desired result.</p>
  */
 public class BloodPressureValueGenerator extends ValueGenerator {
   public enum SysDias {
