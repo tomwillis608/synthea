@@ -23,12 +23,14 @@ import org.mitre.synthea.export.Exporter;
 import org.mitre.synthea.export.Exporter.SupportedFhirVersion;
 import org.mitre.synthea.helpers.Config;
 import org.mitre.synthea.world.agents.Person;
+import org.mitre.synthea.world.agents.Provider;
 
 public class GeneratorTest {
   @Before
   public void setup() {
     TestHelper.exportOff();
     Config.set("generate.only_dead_patients", "false");
+    Provider.clear();
   }
   
   @Test
