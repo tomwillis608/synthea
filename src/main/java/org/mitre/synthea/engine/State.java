@@ -1303,10 +1303,7 @@ public abstract class State implements Cloneable, Serializable {
     private String expression;
     private transient ThreadLocal<ExpressionProcessor> threadExpProcessor;
     
-    @Override
-    protected void initialize(Module module, String name, JsonObject definition) {
-      super.initialize(module, name, definition);
-      
+    private ThreadLocal<ExpressionProcessor> getExpProcessor() {
       // If the ThreadLocal instance hasn't been created yet, create it now
       if (threadExpProcessor == null) {
         threadExpProcessor = new ThreadLocal<ExpressionProcessor>();
@@ -1316,8 +1313,10 @@ public abstract class State implements Cloneable, Serializable {
       if (this.expression != null && threadExpProcessor.get() == null) { 
         threadExpProcessor.set(new ExpressionProcessor(this.expression));
       }
-    }
 
+      return threadExpProcessor;
+    }
+    
     @Override
     public VitalSign clone() {
       VitalSign clone = (VitalSign) super.clone();
@@ -1336,8 +1335,8 @@ public abstract class State implements Cloneable, Serializable {
         person.setVitalSign(vitalSign, new ConstantValueGenerator(person, exact.quantity));
       } else if (range != null) {
         person.setVitalSign(vitalSign, new RandomValueGenerator(person, range.low, range.high));
-      } else if (threadExpProcessor.get() != null) {
-        Number value = (Number) threadExpProcessor.get().evaluate(person, time);
+      } else if (getExpProcessor().get() != null) {
+        Number value = (Number) getExpProcessor().get().evaluate(person, time);
         person.setVitalSign(vitalSign, value.doubleValue());
       } else {
         throw new RuntimeException(
@@ -1392,21 +1391,20 @@ public abstract class State implements Cloneable, Serializable {
     private String expression;
     private transient ThreadLocal<ExpressionProcessor> threadExpProcessor;
     
-    @Override
-    protected void initialize(Module module, String name, JsonObject definition) {
-      super.initialize(module, name, definition);
-      
+    private ThreadLocal<ExpressionProcessor> getExpProcessor() {
       // If the ThreadLocal instance hasn't been created yet, create it now
       if (threadExpProcessor == null) {
         threadExpProcessor = new ThreadLocal<ExpressionProcessor>();
       }
       
       // If there's an expression, create the processor for it
-      if (this.expression != null) { 
+      if (this.expression != null && threadExpProcessor.get() == null) { 
         threadExpProcessor.set(new ExpressionProcessor(this.expression));
       }
-    }
 
+      return threadExpProcessor;
+    }
+    
     @Override
     public Observation clone() {
       Observation clone = (Observation) super.clone();
@@ -1437,8 +1435,8 @@ public abstract class State implements Cloneable, Serializable {
         value = person.getVitalSign(vitalSign, time);
       } else if (valueCode != null) {
         value = valueCode;
-      } else if (threadExpProcessor.get() != null) {
-        value = threadExpProcessor.get().evaluate(person, time);
+      } else if (getExpProcessor().get() != null) {
+        value = getExpProcessor().get().evaluate(person, time);
       } 
       HealthRecord.Observation observation = person.record.observation(time, primaryCode, value);
       entry = observation;

@@ -23,8 +23,6 @@ import org.mitre.synthea.helpers.Config;
 import org.mitre.synthea.helpers.ConstantValueGenerator;
 import org.mitre.synthea.helpers.Utilities;
 import org.mitre.synthea.helpers.ValueGenerator;
-import org.mitre.synthea.helpers.physiology.PhysiologyGeneratorConfig;
-import org.mitre.synthea.helpers.physiology.SimRunner;
 import org.mitre.synthea.world.concepts.HealthRecord;
 import org.mitre.synthea.world.concepts.HealthRecord.Code;
 import org.mitre.synthea.world.concepts.HealthRecord.Encounter;
