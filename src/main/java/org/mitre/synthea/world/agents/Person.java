@@ -17,14 +17,13 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.mitre.synthea.engine.Module;
 import org.mitre.synthea.engine.State;
 import org.mitre.synthea.helpers.Config;
 import org.mitre.synthea.helpers.ConstantValueGenerator;
 import org.mitre.synthea.helpers.Utilities;
 import org.mitre.synthea.helpers.ValueGenerator;
-import org.mitre.synthea.helpers.physiology.PhysiologyGeneratorConfig;
-import org.mitre.synthea.helpers.physiology.SimRunner;
 import org.mitre.synthea.world.concepts.HealthRecord;
 import org.mitre.synthea.world.concepts.HealthRecord.Code;
 import org.mitre.synthea.world.concepts.HealthRecord.Encounter;
@@ -82,11 +81,14 @@ public class Person implements Serializable, QuadTreeElement {
   public static final String LOCATION = "location";
   public static final String ACTIVE_WEIGHT_MANAGEMENT = "active_weight_management";
   public static final String BMI_PERCENTILE = "bmi_percentile";
+  public static final String TWO_YEAR_BMI = "two_year_bmi";
+  public static final String BMI_VECTOR = "bmi_vector";
   public static final String CURRENT_WEIGHT_LENGTH_PERCENTILE = "current_weight_length_percentile";
   private static final String DEDUCTIBLE = "deductible";
   private static final String LAST_MONTH_PAID = "last_month_paid";
 
   public final Random random;
+  public final JDKRandomGenerator mathRandom;
   public final long seed;
   public long populationSeed;
   public Map<String, Object> attributes;
@@ -116,6 +118,7 @@ public class Person implements Serializable, QuadTreeElement {
   public Person(long seed) {
     this.seed = seed; // keep track of seed so it can be exported later
     random = new Random(seed);
+    mathRandom = new JDKRandomGenerator((int) seed);
     attributes = new ConcurrentHashMap<String, Object>();
     vitalSigns = new ConcurrentHashMap<VitalSign, ValueGenerator>();
     symptoms = new ConcurrentHashMap<String, Map<String, Integer>>();
